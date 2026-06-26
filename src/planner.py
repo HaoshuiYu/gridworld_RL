@@ -29,15 +29,15 @@ def value_iteration(env: GraphMDP, gamma: float = 1.0, tol: float = 1e-10,
     P = env.P
     V = np.zeros(n_s, dtype=np.float64)
 
-    # reward table, not appended but generated deterministically since all info available in Q*
+    # reward table, is given then used to build and refine Q* through mlutiple passes
     R = np.full((n_s, n_a), -1.0, dtype=np.float64)
     R[env.goal, :] = 0.0
 
-    for _ in range(max_iters): # greedy algo on bellman, derive Q* recursively until max_iters
+    for _ in range(max_iters): # bellman, derive Q* recursively until max_iters
         # avg paths due to random env effects according to P matrix, but deterministic since P is fixed in environment.py
         Q = R + gamma * np.einsum("ijk,k->ij", P, V) 
         V_new = Q.max(axis=1)        
-        V_new[env.goal] = 0.0 # each move has cost -1, so goal is to get back to reward = 0 for cost bounded by[0,1]
+        V_new[env.goal] = 0.0 # each move has cost -1, so goal is to get back to reward = 0 for cost bounded by[-1,0]
 
         # NOTE: V_new update isn't fixing estimation error, that's for learner. 
         # for all V_new[n] where n = # of states, each pass updates all states at once.
