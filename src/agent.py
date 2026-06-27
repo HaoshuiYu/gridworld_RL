@@ -11,7 +11,9 @@ with similar dependencies as prior)
 
 The performance of the learner is measured through the local policy optimal against the 
 GT optimal without averaging since the average would include noisier actions and exploration
-actions without high reward functions. Instead, we wish to use the best policy "computed path" 
+actions without high reward functions. Instead, we wish to use the best policy "computed path"
+
+TLDR: "Prior actions are inferior to final Q since all of them include partial exploratory purposes." 
 """
 
 from __future__ import annotations
