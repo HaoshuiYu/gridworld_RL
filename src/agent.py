@@ -13,7 +13,7 @@ The performance of the learner is measured through the local policy optimal agai
 GT optimal without averaging since the average would include noisier actions and exploration
 actions without high reward functions. Instead, we wish to use the best policy "computed path"
 
-TLDR: "Prior actions are inferior to final Q since all of them include partial exploratory purposes." 
+TLDR: "Prior actions are inferior to final Q since all of them include exploration noise." 
 """
 
 from __future__ import annotations
