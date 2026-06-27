@@ -53,7 +53,7 @@ def run():
     # build grid to track state coord and coord of opt pathof states
     env = make_grid(ROWS, COLS, slip=SLIP)
     V_star, Q_star, opt_policy = value_iteration(env)
-    opt_steps = mean_optimal_steps(V_star, env.goal)
+    opt_steps = mean_optimal_steps(V_star, env.goal) # avg # of steps to goal for all starts
 
     print("=" * 60)
     print(f"Grid {ROWS}x{COLS} | slip={SLIP} | {len(SEEDS)} seeds")
@@ -66,21 +66,23 @@ def run():
     final_min_visits = []
     final_q_gaps = []
 
-    for si, seed in enumerate(SEEDS): # rng seed for randomness in how RL trains not in slip or environment
+    for si, seed in enumerate(SEEDS): # outter loop: rng seed for randomness in how RL trains not in slip or environment
         agent = QLearningAgent(env, alpha_exponent=ALPHA_EXP,
                                epsilon=EPSILON, seed=seed)
         trained = 0
         for bi, budget in enumerate(BUDGETS):
             agent.train(budget - trained)
             trained = budget
-            V_pi = policy_expected_steps(env, agent.greedy_policy())
-            learned_steps = mean_policy_steps(env, V_pi)
+            V_pi = policy_expected_steps(env, agent.greedy_policy()) # computes V for learner, across all steps
+            learned_steps = mean_policy_steps(env, V_pi) # avg over steps for states, for learner
             regret[bi, si] = learned_steps - opt_steps
         final_min_visits.append(agent.min_visit_count())
         final_q_gaps.append(agent.q_gap_to_optimum(Q_star))
 
     mean_regret = regret.mean(axis=1)
     lo, hi = regret.min(axis=1), regret.max(axis=1)
+
+    # TODO: print and visualization are AI generated for convenience need to double check
 
     print(f"Convergence diagnostics at final budget ({BUDGETS[-1]} steps):")
     print(f"  min visit count over (s,a): {int(np.min(final_min_visits))} "
@@ -90,7 +92,7 @@ def run():
     print(f"  mean residual regret: {mean_regret[-1]:.4f} steps")
     print("=" * 60)
 
-    # visualization
+    # visualization: 
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.axhline(0.0, color="#444", lw=1.4, ls="--",
                label="planning optimum (value iteration)")
