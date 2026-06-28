@@ -75,9 +75,9 @@ def run():
             trained = budget
             V_pi = policy_expected_steps(env, agent.greedy_policy()) # computes V for learner, across all steps
             learned_steps = mean_policy_steps(env, V_pi) # avg over steps for states, for learner
-            regret[bi, si] = learned_steps - opt_steps
-        final_min_visits.append(agent.min_visit_count())
-        final_q_gaps.append(agent.q_gap_to_optimum(Q_star))
+            regret[bi, si] = learned_steps - opt_steps # gap in performance i.e. # of steps or cost total
+        final_min_visits.append(agent.min_visit_count()) # global min # of visits to a state
+        final_q_gaps.append(agent.q_gap_to_optimum(Q_star)) # gap in estimation of Q i.e. abs(Q*-Q)
 
     mean_regret = regret.mean(axis=1)
     lo, hi = regret.min(axis=1), regret.max(axis=1)
@@ -93,19 +93,36 @@ def run():
     print("=" * 60)
 
     # visualization: 
-    fig, ax = plt.subplots(figsize=(7, 4.5))
-    ax.axhline(0.0, color="#444", lw=1.4, ls="--",
-               label="planning optimum (value iteration)")
-    ax.plot(BUDGETS, mean_regret, color="#c0392b", lw=2.2, marker="o",
-            label="learned policy (Q-learning)")
-    ax.fill_between(BUDGETS, lo, hi, color="#c0392b", alpha=0.15,
-                    label="min-max over seeds")
-    ax.set_xscale("log")
-    ax.set_xlabel("training steps (log scale)")
-    ax.set_ylabel("excess expected steps-to-goal\n(learned - optimal)")
-    ax.set_title(f"Planning-vs-Learning Gap on a {ROWS}x{COLS} Grid (slip={SLIP})")
-    ax.legend(frameon=False)
-    ax.grid(True, alpha=0.25)
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4.8))
+
+    # Left: full view 
+    ax1.axhline(0.0, color="#444", lw=1.4, ls="--",
+                label="planning optimum (value iteration)")
+    ax1.plot(BUDGETS, mean_regret, color="#c0392b", lw=2.2, marker="o",
+             label="learned policy (Q-learning)")
+    ax1.fill_between(BUDGETS, lo, hi, color="#c0392b", alpha=0.15,
+                     label="min-max over seeds")
+    ax1.set_xscale("log")
+    ax1.set_xlabel("training steps (log scale)")
+    ax1.set_ylabel("excess expected steps-to-goal\n(learned - optimal)")
+    ax1.set_title("Full view: gap closing")
+    ax1.legend(frameon=False)
+    ax1.grid(True, alpha=0.25)
+
+    # zooms in towards the right to make convergence and gaps at higher budget more viewable.
+    ax2.axhline(0.0, color="#444", lw=1.4, ls="--")
+    ax2.plot(BUDGETS, mean_regret, color="#c0392b", lw=2.2, marker="o")
+    ax2.fill_between(BUDGETS, lo, hi, color="#c0392b", alpha=0.15)
+    ax2.set_xscale("log")
+    ax2.set_ylim(-0.5, 10)   # zoom: residual gap detail near the optimum
+    ax2.set_xlabel("training steps (log scale)")
+    ax2.set_ylabel("excess steps (zoomed)")
+    ax2.set_title("Zoom: convergence detail (y in [0, 10])")
+    ax2.grid(True, alpha=0.25)
+
+    fig.suptitle(f"Planning-vs-Learning Gap on a {ROWS}x{COLS} Grid (slip={SLIP})",
+                 fontsize=13)
     fig.tight_layout()
 
     out_dir = os.path.join(os.path.dirname(__file__), "..", "figures")
